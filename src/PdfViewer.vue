@@ -73,7 +73,7 @@ const props = defineProps({
   },
   step: {
     type: String,
-    default: 'single'
+    default: 'total'
   }, // 选择器翻页模式，single-每次翻一页，total-每次翻 previewSize 页
   currentPage: {
     type: Number,

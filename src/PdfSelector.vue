@@ -10,6 +10,7 @@
                :config="selectorConfig"
                :fileSource="pdfFileSource"
                :currentPage="currentPage"
+               :pageGap="GAP"
                :pageTurn="pageTurn" />
     </div>
     <div class="pdfSelector__pagination"
@@ -26,19 +27,22 @@ import ArrowDown from "./assets/ArrowDown.vue";
 import ArrowRight from "./assets/ArrowRight.vue";
 import ArrowTop from "./assets/ArrowTop.vue";
 
+// 预览页边距
+const GAP = 6;
+
 const props = defineProps({
   previewSize: {
     type: Number,
-    default: 5,
+    default: 5, // 预览页数
   },
-  pdfFileSource: Object,
-  pageClick: Function,
+  pdfFileSource: Object, // pdf 文件流对象
+  pageClick: Function, // 预览页单击事件
   step: {
     type: String,
-    default: "single",
+    default: "total", // 翻页步长
   },
-  currentPage: Number,
-  totalPage: Number
+  currentPage: Number, // 当前选中页码
+  totalPage: Number // pdf 文件总页数
 });
 
 const selectorConfig = {
@@ -47,7 +51,7 @@ const selectorConfig = {
 };
 
 const containerStyle = {
-  width: `${props.previewSize * selectorConfig.width}px`,
+  width: `${props.previewSize * (selectorConfig.width + 2 * GAP + 2)}px`,
 };
 
 const emit = defineEmits(["pageTurn"]);
@@ -60,7 +64,8 @@ const { prev, next, refPdfContainer } = usePageTurn({
   previewSize: props.previewSize,
   step: props.step,
   currentPage: 1,
-  totalPage: props.totalPage
+  totalPage: props.totalPage,
+  gap: GAP
 });
 
 const turnDirection = inject('turnDirection');
@@ -109,10 +114,6 @@ watch(currentPage, () => {
   &__container {
     overflow: hidden;
     margin: 10px;
-
-    .pdfCore__page {
-      padding: 10px;
-    }
   }
 }
 </style>

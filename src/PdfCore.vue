@@ -12,6 +12,7 @@
     <canvas v-for="pageIndex in totalPages"
             :id="id + pageIndex"
             :key="pageIndex"
+            :style="{ padding: `${pageGap}px` }"
             :class="canvasClassList(pageIndex)"
             @click="handleViewClick(pageIndex)"></canvas>
   </div>
@@ -34,7 +35,10 @@ const props = defineProps({
   currentPage: Number,
   pageTurn: Function,
   src: String,
-  modelValue: Number
+  pageGap: {
+    type: Number,
+    default: 0
+  },
 });
 
 const emit = defineEmits(["onFileLoaded", "onRenderComplete", 'update:modelValue', 'onTotalPage']);
@@ -91,7 +95,7 @@ const canvasClassList = (pageIndex) => {
 
   &__page {
     &-selected {
-      border: 2px solid blue;
+      border: 2px solid rgb(0, 213, 217);
       border-radius: 2px;
     }
   }

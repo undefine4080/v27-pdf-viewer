@@ -215,8 +215,8 @@ function usePageTurn(options) {
     previewSize, // 预览页数
     step = "single", // 翻页步长
     currentPage = 1, // 当前页码
-    margin = 0, // 页边距
-    totalPage // 总页数
+    totalPage, // 总页数
+    gap = 0, // 页边距
   } = options;
 
   const refPdfContainer = ref();
@@ -235,7 +235,7 @@ function usePageTurn(options) {
     const { clientWidth, clientHeight } = refPdfContainer.value;
     frame.value = direction === "horizontal" ? clientWidth : clientHeight;
 
-    const offset = (step === "single" ? frame.value / (previewSize ?? 1) : frame.value) + margin;
+    const offset = (step === "single" ? frame.value / (previewSize ?? 1) : frame.value) + gap;
 
     prev.value = _throttle(() => {
       if (curPageNo.value > 1) {
@@ -262,7 +262,7 @@ function usePageTurn(options) {
       if (!previewSize) {
         curPageNo.value = pageIndex;
         const step = pageIndex - lastPageNo.value;
-        const config = { left: (frame.value + margin) * step };
+        const config = { left: (frame.value + gap) * step };
         refPdfContainer.value.scrollBy(config);
         lastPageNo.value = curPageNo.value;
       }
