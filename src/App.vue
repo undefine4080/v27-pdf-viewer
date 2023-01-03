@@ -1,11 +1,11 @@
 <template>
   <div id="app">
-    <pdf-viewer src="./demo.pdf" :selector="true"></pdf-viewer>
+    <hw-pdf-viewer src="./demo.pdf"
+                   :selector="true"></hw-pdf-viewer>
   </div>
 </template>
 
 <script setup>
-import PdfViewer from './PdfViewer.vue';
 </script>
 
 <style lang="less">
