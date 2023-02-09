@@ -3,22 +3,7 @@ import * as PdfJs from "pdfjs-dist/legacy/build/pdf.js";
 
 const workerSrc = require("pdfjs-dist/build/pdf.worker.entry");
 
-function _throttle(fn, wait = 200) {
-  let last, timer, now;
-  return function () {
-    now = Date.now();
-    if (last && now - last < wait) {
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        last = now;
-        fn.call(this, ...arguments);
-      }, wait);
-    } else {
-      last = now;
-      fn.call(this, ...arguments);
-    }
-  };
-}
+
 
 function usePDF(options) {
   const {

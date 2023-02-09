@@ -1,112 +1,117 @@
 <template>
-  <div class="pdfCore"
-       :style="{ alignItems: isRendered ? 'center' : 'flex-start' }">
-    <div class="pdfCore__loading"
-         :style="{ width: width + 'px', height: height + 'px' }"
-         v-if="loaded !== true">
-      <div v-if="loaded === false">文件载入失败...请刷新页面</div>
+  <div class="pdfCore__container">
+    <div class="pdfCore__pagination"
+      :class="{ 'pdfCore__pagination-disabled': page === 1 || rendering }"
+      @click="prev"> <arrow-left /> </div>
 
-      <div v-if="loaded === null">文件加载中...</div>
+    <div class="pdfCore__view"
+      ref="refScrollContainer"
+      :style="{ width: width + 'px', height: height + 'px' }">
+      <div class="pdfCore__pages">
+        <canvas v-for="pageIndex in total"
+          :id="`${id}-${pageIndex}`"
+          :key="pageIndex"></canvas>
+      </div>
     </div>
 
-    <canvas v-for="pageIndex in totalPages"
-            :id="id + pageIndex"
-            :key="pageIndex"
-            :style="{ padding: `${pageGap}px` }"
-            :class="canvasClassList(pageIndex)"
-            @click="handleViewClick(pageIndex)"></canvas>
+    <div class="pdfCore__pagination"
+      :class="{ 'pdfCore__pagination-disabled': page === total || rendering }"
+      @click="next"> <arrow-right /> </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps, toRefs, ref } from "vue";
-import { usePDF } from "./hooks";
+import { ref, inject, watchEffect, watch } from "vue";
+import ArrowLeft from "./assets/ArrowLeft.vue";
+import ArrowRight from "./assets/ArrowRight.vue";
+import { usePdfRender, usePageSwitch, usePageScroll } from './newHooks';
 
 const props = defineProps({
   id: {
     type: String,
     required: true,
   },
-  config: {
-    type: Object,
-    required: true,
-  },
-  fileSource: Object,
-  currentPage: Number,
-  pageTurn: Function,
-  src: String,
-  pageGap: {
+  width: {
     type: Number,
+    required: false,
+    default: 300
+  },
+  height: {
+    type: Number,
+    required: false,
+    default: 600
+  },
+  fileSource: {
+    required: true
+  },
+  page: {
+    type: Number,
+    required: false,
+    default: 1
+  },
+  total: {
+    type: Number,
+    required: true,
     default: 0
   },
 });
 
-const emit = defineEmits(["onFileLoaded", "onRenderComplete", 'update:modelValue', 'onTotalPage']);
+const { renderPage } = usePdfRender(props);
 
-const fileLoaded = (fileSource) => {
-  emit("onFileLoaded", fileSource);
-};
-
-const isRendered = ref(false);
-const renderComplete = (isComplete) => {
-  emit("onRenderComplete", isComplete);
-  isRendered.value = isComplete;
-};
-
-const { fileSource, currentPage, config, id, src } = toRefs(props);
-const { width, height } = config.value;
-
-const setTotalPage = (value) => emit('onTotalPage', value);
-
-const { loaded, totalPages } = usePDF({
-  id: id.value,
-  width,
-  height,
-  src,
-  fileSource: fileSource.value,
-  currentPage,
-  fileLoaded,
-  renderComplete,
-  setTotalPage
+// 首次绘制
+watchEffect(() => {
+  if (props.fileSource) {
+    renderPage(1).then(renderPage(2));
+  }
 });
 
-const pageIndex = ref(1);
-const handleViewClick = (pageNo) => {
-  pageIndex.value = pageNo;
-  props.pageTurn(pageNo);
-};
+const { prev, next, page, rendering } = usePageSwitch(props.page, props.total, renderPage);
 
-const canvasClassList = (pageIndex) => {
-  let classList;
-  if (props.currentPage === pageIndex) {
-    classList = "pdfCore__page pdfCore__page-selected";
-  } else {
-    classList = "pdfCore__page";
-  }
-  return classList;
-};
+const updateCurPage = inject('updateCurPage');
+watchEffect(() => updateCurPage(page));
+
+const { refScrollContainer } = usePageScroll(page, props.width, props.height);
 
 </script>
 <style lang="less">
 .pdfCore {
-  display: flex;
-  flex-wrap: nowrap;
-  width: max-content;
-
-  &__page {
-    &-selected {
-      border: 2px solid rgb(0, 213, 217);
-      border-radius: 2px;
-    }
+  &__container {
+    display: flex;
+    flex-flow: row nowrap;
+    height: max-content;
+    position: relative;
   }
 
-  &__loading {
-    position: absolute;
-    z-index: 100;
-    left: 15;
-    top: 15;
-    color: black;
-    background-color: rgb(163, 163, 163);
+  &__view {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+
+  &__pages {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+  }
+
+  &__pagination {
+    padding: 0 10px;
+
+    svg {
+      position: relative;
+      top: calc(50% - 10px);
+      cursor: pointer;
+    }
+
+    &-disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+
+      svg {
+        cursor: not-allowed;
+        filter: grayscale(0.5);
+      }
+    }
   }
 }
 </style>
