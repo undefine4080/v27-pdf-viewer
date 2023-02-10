@@ -1,30 +1,26 @@
 <template>
-  <div class="pdfSelector">
-    <!-- <div class="pdfSelector__pagination"
-      @click="prev"><arrow-top /></div> -->
-
+  <div class="pdfSelector"
+    ref="refScrollContainer">
     <div class="pdfSelector__view"
       :style="{ width: SIZE + 'px', height: height + 'px' }">
       <div class="pdfSelector__pages"
         :style="{ width: SIZE + 'px' }">
-        <canvas v-for="pageIndex in total"
-          :id="`${id}-${pageIndex}`"
+        <pdf-page v-for="pageIndex in total"
           :key="pageIndex"
-          @click="selectPage(pageIndex)"
-          :class="{ 'pdfSelector__pages-selected': page === pageIndex }"></canvas>
+          :id="`${id}-${pageIndex}`"
+          :page-index="pageIndex"
+          :scroll-container="refScrollContainer"
+          :selected-page="page"
+          @click.native="selectPage(pageIndex)" />
       </div>
     </div>
-
-    <!-- <div class="pdfSelector__pagination"
-      @click="next"><arrow-down /></div> -->
   </div>
 </template>
 
 <script setup>
-import { ref, toRef, inject, watch, watchEffect, nextTick } from "vue";
-import ArrowDown from "./assets/ArrowDown.vue";
-import ArrowTop from "./assets/ArrowTop.vue";
-import { usePdfRender, usePageSwitch, usePageScroll } from './newHooks';
+import { ref, toRef, inject, watch, provide } from "vue";
+import { usePdfRender } from './hooks';
+import PdfPage from "./PdfPage.vue";
 
 const props = defineProps({
   id: {
@@ -66,6 +62,8 @@ const props = defineProps({
   }
 });
 
+const refScrollContainer = ref();
+
 const SIZE = 180;
 let direction = 'vertical';
 if (props.selectorPosition === 'left' || props.selectorPosition === 'right') {
@@ -84,36 +82,21 @@ const { renderPage } = usePdfRender({
   fileSource
 });
 
-// 首次绘制
-const loading = toRef(props, 'loading');
-watch(loading, () => {
-  if (!loading.value) {
-    nextTick(() => {
-      renderPage(1)
-        .then(renderPage(2))
-        .then(renderPage(3))
-        .then(renderPage(4))
-        .then(renderPage(5));
-    });
-  }
-});
-
-// const { prev, next, page, to } = usePageSwitch(props.page, props.total, renderPage);
-
-// const { refScrollContainer } = usePageScroll(page, props.width, props.height);
+provide('renderPage', renderPage);
 
 const page = ref(props.page);
-
 const selectPage = pageIndex => {
   page.value = pageIndex;
 };
 
 const updateCurPage = inject('updateCurPage');
-watchEffect(() => updateCurPage(page.value));
+watch(page, () => updateCurPage(page.value));
 </script>
 
 <style lang="less">
 .pdfSelector {
+  overflow: hidden;
+
   &__container {
     display: flex;
     flex-flow: row nowrap;
@@ -145,14 +128,6 @@ watchEffect(() => updateCurPage(page.value));
     display: flex;
     flex-flow: column;
     align-items: center;
-
-    canvas {
-      padding: 10px;
-    }
-
-    &-selected {
-      border: 2px red solid;
-    }
   }
 
   &__pagination {

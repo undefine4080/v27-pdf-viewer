@@ -1,16 +1,19 @@
 <template>
-  <div class="pdfCore__container">
+  <div class="pdfCore__container"
+    :style="{ minHeight: height + 'px' }">
     <div class="pdfCore__pagination"
       :class="{ 'pdfCore__pagination-disabled': page === 1 || rendering }"
       @click="prev"> <arrow-left /> </div>
 
     <div class="pdfCore__view"
       ref="refScrollContainer"
-      :style="{ width: width + 'px', height: height + 'px' }">
+      :style="{ width: width + 'px' }">
       <div class="pdfCore__pages">
         <canvas v-for="pageIndex in total"
+          class="pdfCore__page"
           :id="`${id}-${pageIndex}`"
-          :key="pageIndex"></canvas>
+          :key="pageIndex"
+          :width="width"></canvas>
       </div>
     </div>
 
@@ -24,7 +27,7 @@
 import { inject, watch, watchEffect, toRef, nextTick } from "vue";
 import ArrowLeft from "./assets/ArrowLeft.vue";
 import ArrowRight from "./assets/ArrowRight.vue";
-import { usePdfRender, usePageSwitch, usePageScroll } from './newHooks';
+import { usePdfRender, usePageSwitch, usePageScroll } from './hooks';
 
 const props = defineProps({
   id: {
@@ -39,7 +42,6 @@ const props = defineProps({
   height: {
     type: Number,
     required: false,
-    default: 600
   },
   fileSource: {
     required: true
@@ -101,6 +103,10 @@ const { refScrollContainer } = usePageScroll(page, props.width, props.height);
     display: flex;
     flex-flow: row nowrap;
     align-items: center;
+  }
+
+  &__page {
+    background: darkgray;
   }
 
   &__pagination {

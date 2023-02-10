@@ -1,7 +1,8 @@
 <template>
   <div class="pdfViewer">
     <div class="pdfViewer__selector"
-      :style="{ width: '180px' }">
+      :style="{ width: '180px' }"
+      v-if="selector">
       <pdf-selector id="pdf-canvas-selector"
         :width="width"
         :height="height"
@@ -41,7 +42,7 @@
 </template>
 <script setup>
 import { ref, provide } from "vue";
-import { usePdfSource } from './newHooks';
+import { usePdfSource } from './hooks';
 import PdfCore from "./PdfCore.vue";
 import PdfSelector from "./PdfSelector.vue";
 
@@ -58,8 +59,7 @@ const props = defineProps({
   },
   height: {
     type: Number,
-    required: false,
-    default: 600, // 查看器高度
+    required: false, // 查看器高度
   },
   selector: {
     type: Boolean,
@@ -87,6 +87,8 @@ const { fileSource, total, loading } = usePdfSource(props.src);
 <style lang="less">
 .pdfViewer {
   display: flex;
+  align-items: center;
+  padding: 30px;
 
   &__pageNo {
     height: 50px;
