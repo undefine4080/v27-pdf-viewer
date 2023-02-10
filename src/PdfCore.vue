@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { ref, inject, watchEffect, watch } from "vue";
+import { inject, watch, watchEffect, toRef, nextTick } from "vue";
 import ArrowLeft from "./assets/ArrowLeft.vue";
 import ArrowRight from "./assets/ArrowRight.vue";
 import { usePdfRender, usePageSwitch, usePageScroll } from './newHooks';
@@ -54,18 +54,27 @@ const props = defineProps({
     required: true,
     default: 0
   },
-});
-
-const { renderPage } = usePdfRender(props);
-
-// 首次绘制
-watchEffect(() => {
-  if (props.fileSource) {
-    renderPage(1).then(renderPage(2));
+  loading: {
+    type: Boolean,
+    required: true,
+    default: true
   }
 });
 
-const { prev, next, page, rendering } = usePageSwitch(props.page, props.total, renderPage);
+const fileSource = toRef(props, 'fileSource');
+const { renderPage } = usePdfRender({ ...props, fileSource });
+
+// 首次绘制
+const loading = toRef(props, 'loading');
+watch(loading, () => {
+  if (!loading.value) {
+    nextTick(() => {
+      renderPage(1).then(renderPage(2));
+    });
+  }
+});
+
+const { prev, next, page, rendering } = usePageSwitch(props, renderPage);
 
 const updateCurPage = inject('updateCurPage');
 watchEffect(() => updateCurPage(page));

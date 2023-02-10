@@ -1,4 +1,4 @@
-import { nextTick, ref, onMounted, watch, watchEffect, isRef } from "vue";
+import { nextTick, ref, watch, watchEffect, toRefs, isRef } from "vue";
 import * as PdfJs from "pdfjs-dist/legacy/build/pdf.js";
 
 const workerSrc = require("pdfjs-dist/build/pdf.worker.entry");
@@ -136,16 +136,16 @@ function usePdfRender(options) {
 
     // 绘制页面
     const renderPage = (pageNum = 1) => {
-        if (!fileSource) return;
+        const source = isRef(fileSource) ? fileSource.value : fileSource;
 
-        const renderTask = fileSource.getPage(pageNum).then((page) => {
+        if (!source) return;
+
+        return source.getPage(pageNum).then((page) => {
             const context = createContext(page, pageNum);
 
             // 将pdf文件的内容渲染到canvas中
             page.render(context);
         });
-
-        return renderTask;
     };
 
     return {
@@ -153,8 +153,10 @@ function usePdfRender(options) {
     };
 }
 
-function usePageSwitch(initialPage, total, callback) {
-    const page = ref(initialPage);
+function usePageSwitch(options, callback) {
+    const { page: initialPage, total } = toRefs(options);
+
+    const page = ref(initialPage.value);
     const rendering = ref(false);
 
     const prev = _debounce(() => {
@@ -165,13 +167,15 @@ function usePageSwitch(initialPage, total, callback) {
 
     const next = _debounce(() => {
         if (!rendering.value) {
-            (page.value < total) && (page.value += 1);
+            (page.value < total.value) && (page.value += 1);
         }
     }, 500);
 
     const alreadyRenderedPages = ref(new Set([1, 2]));
     watch(page, () => {
-        if (page.value > 1 && !alreadyRenderedPages.value.has(page.value + 1)) {
+        if (page.value > 1 &&
+            !alreadyRenderedPages.value.has(page.value + 1)) {
+
             alreadyRenderedPages.value.add(page.value);
             setTimeout(() => {
                 rendering.value = true;
@@ -186,7 +190,8 @@ function usePageSwitch(initialPage, total, callback) {
         prev,
         next,
         page,
-        rendering
+        rendering,
+        alreadyRenderedPages
     };
 }
 

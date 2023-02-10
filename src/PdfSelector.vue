@@ -1,119 +1,178 @@
 <template>
   <div class="pdfSelector">
-    <div class="pdfSelector__pagination"
-         @click="prev"><arrow-left /></div>
-    <div class="pdfSelector__container"
-         ref="refPdfContainer"
-         :style="containerStyle">
-      <PdfCore v-if="pdfFileSource"
-               id="pdf-canvas-selector"
-               :config="selectorConfig"
-               :fileSource="pdfFileSource"
-               :currentPage="currentPage"
-               :pageGap="GAP"
-               :pageTurn="pageTurn" />
+    <!-- <div class="pdfSelector__pagination"
+      @click="prev"><arrow-top /></div> -->
+
+    <div class="pdfSelector__view"
+      :style="{ width: SIZE + 'px', height: height + 'px' }">
+      <div class="pdfSelector__pages"
+        :style="{ width: SIZE + 'px' }">
+        <canvas v-for="pageIndex in total"
+          :id="`${id}-${pageIndex}`"
+          :key="pageIndex"
+          @click="selectPage(pageIndex)"
+          :class="{ 'pdfSelector__pages-selected': page === pageIndex }"></canvas>
+      </div>
     </div>
-    <div class="pdfSelector__pagination"
-         @click="next"><arrow-right /></div>
+
+    <!-- <div class="pdfSelector__pagination"
+      @click="next"><arrow-down /></div> -->
   </div>
 </template>
 
 <script setup>
-import { ref, watch, watchEffect, inject, toRef } from "vue";
-import PdfCore from "./PdfCore.vue";
-import { usePageTurn } from "./hooks";
-import ArrowLeft from "./assets/ArrowLeft.vue";
+import { ref, toRef, inject, watch, watchEffect, nextTick } from "vue";
 import ArrowDown from "./assets/ArrowDown.vue";
-import ArrowRight from "./assets/ArrowRight.vue";
 import ArrowTop from "./assets/ArrowTop.vue";
-
-// 预览页边距
-const GAP = 6;
+import { usePdfRender, usePageSwitch, usePageScroll } from './newHooks';
 
 const props = defineProps({
-  previewSize: {
-    type: Number,
-    default: 5, // 预览页数
-  },
-  pdfFileSource: Object, // pdf 文件流对象
-  pageClick: Function, // 预览页单击事件
-  step: {
+  id: {
     type: String,
-    default: "total", // 翻页步长
+    required: true,
   },
-  currentPage: Number, // 当前选中页码
-  totalPage: Number // pdf 文件总页数
-});
-
-const selectorConfig = {
-  width: 150,
-  direction: "horizontal",
-};
-
-const containerStyle = {
-  width: `${props.previewSize * (selectorConfig.width + 2 * GAP + 2)}px`,
-};
-
-const emit = defineEmits(["pageTurn"]);
-const pageTurn = (pageNo) => emit("pageTurn", pageNo);
-
-const isRenderComplete = ref(false);
-const { prev, next, refPdfContainer } = usePageTurn({
-  isRenderComplete,
-  direction: selectorConfig.direction,
-  previewSize: props.previewSize,
-  step: props.step,
-  currentPage: 1,
-  totalPage: props.totalPage,
-  gap: GAP
-});
-
-const turnDirection = inject('turnDirection');
-const currentPage = toRef(props, 'currentPage');
-watch(currentPage, () => {
-  const mod = props.currentPage % props.previewSize;
-
-  if (turnDirection.value === 'next') {
-    if (mod === 1) {
-      next.value();
-    }
-  } else if (turnDirection.value === 'prev') {
-    if (mod === 0) {
-      prev.value();
-    }
+  selectorPosition: {
+    type: String,
+    required: false,
+    default: 'left' // pdf 选择器的位置
+  },
+  fileSource: {
+    required: true
+  },
+  page: {
+    type: Number,
+    required: false,
+    default: 1
+  },
+  total: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  width: {
+    type: Number,
+    required: false,
+    default: 300
+  },
+  height: {
+    type: Number,
+    required: false,
+    default: 600
+  },
+  loading: {
+    type: Boolean,
+    required: true,
+    default: true
   }
 });
-</script>
-<style lang="less">
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+
+const SIZE = 180;
+let direction = 'vertical';
+if (props.selectorPosition === 'left' || props.selectorPosition === 'right') {
+  direction = 'vertical';
+} else if (props.selectorPosition === 'top' || props.selectorPosition === 'bottom') {
+  direction = 'horizontal';
+} else {
+  console.warn("the selectorPosition may not correct, it must include 'left','right','top','bottom' please check the value");
 }
 
+const fileSource = toRef(props, 'fileSource');
+const { renderPage } = usePdfRender({
+  id: props.id,
+  height: direction === 'horizontal' ? (SIZE - 30) : undefined,
+  width: direction === 'vertical' ? (SIZE - 30) : undefined,
+  fileSource
+});
+
+// 首次绘制
+const loading = toRef(props, 'loading');
+watch(loading, () => {
+  if (!loading.value) {
+    nextTick(() => {
+      renderPage(1)
+        .then(renderPage(2))
+        .then(renderPage(3))
+        .then(renderPage(4))
+        .then(renderPage(5));
+    });
+  }
+});
+
+// const { prev, next, page, to } = usePageSwitch(props.page, props.total, renderPage);
+
+// const { refScrollContainer } = usePageScroll(page, props.width, props.height);
+
+const page = ref(props.page);
+
+const selectPage = pageIndex => {
+  page.value = pageIndex;
+};
+
+const updateCurPage = inject('updateCurPage');
+watchEffect(() => updateCurPage(page.value));
+</script>
+
+<style lang="less">
 .pdfSelector {
-  display: flex;
-  justify-content: center;
-  overflow: hidden;
-  margin: 50px 0;
+  &__container {
+    display: flex;
+    flex-flow: row nowrap;
+    height: max-content;
+    position: relative;
+  }
 
-  &__pagination {
-    min-width: 50px;
-    min-height: 50px;
-    cursor: pointer;
+  &__view {
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    position: relative;
 
-    &:first-child {
-      .center();
+    &::-webkit-scrollbar {
+      height: 3px;
+      width: 3px;
     }
 
-    &:last-child {
-      .center();
+    &::-webkit-scrollbar-track {
+      background-color: rgb(218, 218, 218);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      box-shadow: inset 0 0 6px rgb(65, 65, 65);
     }
   }
 
-  &__container {
-    overflow: hidden;
-    margin: 10px;
+  &__pages {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+
+    canvas {
+      padding: 10px;
+    }
+
+    &-selected {
+      border: 2px red solid;
+    }
+  }
+
+  &__pagination {
+    padding: 0 10px;
+
+    svg {
+      position: relative;
+      left: calc(50% - 10px);
+      cursor: pointer;
+    }
+
+    &-disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+
+      svg {
+        cursor: not-allowed;
+        filter: grayscale(0.5);
+      }
+    }
   }
 }
 </style>
