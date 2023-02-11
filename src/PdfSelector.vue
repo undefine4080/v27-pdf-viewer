@@ -1,16 +1,20 @@
 <template>
-  <div class="pdfSelector" ref="refScrollContainer">
+  <div class="pdfSelector" ref="refViewContainer">
     <div
       class="pdfSelector__view"
-      :style="{ width: '180px', height: height + 'px' }"
+      ref="refScrollContainer"
+      :style="{ width: PREVIEW_SIZE.width + 'px', height: height + 'px' }"
     >
-      <div class="pdfSelector__pages" :style="{ width: SIZE + 'px' }">
+      <div
+        class="pdfSelector__pages"
+        :style="{ width: PREVIEW_SIZE.width + 'px' }"
+      >
         <pdf-page
           v-for="pageIndex in total"
           :key="pageIndex"
           :id="`${id}-${pageIndex}`"
           :page-index="pageIndex"
-          :scroll-container="refScrollContainer"
+          :scroll-container="refViewContainer"
           :selected-page="currentPage"
           @click.native="selectPage(pageIndex)"
         />
@@ -23,6 +27,12 @@
 import { ref, toRef, inject, watch, provide } from "vue";
 import { usePdfRender } from "./hooks";
 import PdfPage from "./PdfPage.vue";
+
+const PREVIEW_SIZE = {
+  width: 180,
+  height: 250,
+  padding: 30,
+};
 
 const props = defineProps({
   id: {
@@ -64,9 +74,9 @@ const props = defineProps({
   },
 });
 
+const refViewContainer = ref();
 const refScrollContainer = ref();
 
-const SIZE = 180;
 let direction = "vertical";
 if (props.selectorPosition === "left" || props.selectorPosition === "right") {
   direction = "vertical";
@@ -84,22 +94,31 @@ if (props.selectorPosition === "left" || props.selectorPosition === "right") {
 const fileSource = toRef(props, "fileSource");
 const { renderPage } = usePdfRender({
   id: props.id,
-  height: 220,
-  width: 150,
+  height: PREVIEW_SIZE.height - PREVIEW_SIZE.padding,
+  width: PREVIEW_SIZE.width - PREVIEW_SIZE.padding,
   fileSource,
 });
-
 provide("renderPage", renderPage);
 
 const currentPage = ref(props.page);
-watch(props, () => (currentPage.value = props.page));
-
 const selectPage = (pageIndex) => {
   currentPage.value = pageIndex;
 };
+watch(props, () => (currentPage.value = props.page));
 
 const updateCurPage = inject("updateCurPage");
 watch(currentPage, () => updateCurPage(currentPage.value));
+
+const scrollToSelectedPage = (pageIndex) => {
+  const scrollConfig = {
+    top: PREVIEW_SIZE.height * (pageIndex - 1) - PREVIEW_SIZE.height,
+    behavior: "smooth",
+  };
+
+  refScrollContainer.value.scrollTo(scrollConfig);
+};
+provide("scrollToSelectedPage", scrollToSelectedPage);
+
 </script>
 
 <style lang="scss">

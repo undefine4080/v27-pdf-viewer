@@ -150,7 +150,6 @@ function usePdfRender(options) {
 
       // 将pdf文件的内容渲染到canvas中
       window.requestAnimationFrame(() => page.render(context));
-      // window.requestIdleCallback(() => page.render(context));
 
       // 记录已渲染过的页
       alreadyRenderedPages.value.add(pageNum);
@@ -227,18 +226,15 @@ function usePageSwitch(initialPage, total, callback) {
   };
 }
 
-function usePageScroll(page, width, height) {
+function usePageScroll(page, scrollDistance) {
   const refScrollContainer = ref();
 
   watch(page, () => {
     const scrollConfig = {
-      left: width * (page.value - 1),
-      // behavior: "smooth"
+      left: scrollDistance * (page.value - 1),
     };
 
-    window.requestAnimationFrame(() => {
-      refScrollContainer.value.scrollTo(scrollConfig);
-    });
+    refScrollContainer.value.scrollTo(scrollConfig);
   });
 
   return {
@@ -271,10 +267,43 @@ function useLazyLoad(scrollContainer, targetContainer, callback) {
   });
 }
 
+function useInViewport(scrollContainer, targetContainer) {
+  const isInViewport = ref(false);
+  const observer = ref();
+
+  onMounted(() => {
+    const config = {
+      root: scrollContainer.value,
+      threshold: 0,
+    };
+
+    observer.value = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+
+      if (entry.intersectionRatio > config.threshold) {
+        isInViewport.value = true;
+      } else {
+        isInViewport.value = false;
+      }
+    }, config);
+
+    observer.value.observe(targetContainer.value);
+  });
+
+  onBeforeUnmount(() => {
+    observer.value.disconnect();
+  });
+
+  return {
+    isInViewport,
+  };
+}
+
 export {
   usePdfSource,
   usePdfRender,
   usePageSwitch,
   usePageScroll,
   useLazyLoad,
+  useInViewport,
 };

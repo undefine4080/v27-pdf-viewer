@@ -74,11 +74,11 @@ const props = defineProps({
   },
 });
 
-const fileSource = toRef(props, "fileSource");
+const { fileSource, loading, total } = toRefs(props);
+
 const { renderPage } = usePdfRender({ ...props, fileSource });
 
 // 首次绘制
-const loading = toRef(props, "loading");
 watch(loading, () => {
   if (!loading.value && fileSource.value) {
     renderPage(1).then(renderPage(2));
@@ -90,17 +90,12 @@ watch(props, () => {
   currentPage.value = props.page;
 });
 
-const { page: initialPage, total } = toRefs(props);
-const { prev, next, page } = usePageSwitch( currentPage, total, renderPage);
+const { prev, next, page } = usePageSwitch(currentPage, total, renderPage);
 
 const updateCurPage = inject("updateCurPage");
 watch(page, () => updateCurPage(page.value));
 
-const { refScrollContainer } = usePageScroll(
-  currentPage,
-  props.width,
-  props.height
-);
+const { refScrollContainer } = usePageScroll(currentPage, props.width);
 </script>
 <style lang="scss">
 .pdfCore {
