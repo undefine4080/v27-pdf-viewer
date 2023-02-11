@@ -1,33 +1,44 @@
 <template>
-  <div class="pdfCore__container"
-    :style="{ minHeight: height + 'px' }">
-    <div class="pdfCore__pagination"
-      :class="{ 'pdfCore__pagination-disabled': page === 1 || rendering }"
-      @click="prev"> <arrow-left /> </div>
+  <div class="pdfCore__container" :style="{ minHeight: height + 'px' }">
+    <div
+      class="pdfCore__pagination"
+      :class="{ 'pdfCore__pagination-disabled': currentPage === 1 }"
+      @click="prev"
+    >
+      <arrow-left />
+    </div>
 
-    <div class="pdfCore__view"
+    <div
+      class="pdfCore__view"
       ref="refScrollContainer"
-      :style="{ width: width + 'px' }">
+      :style="{ width: width + 'px' }"
+    >
       <div class="pdfCore__pages">
-        <canvas v-for="pageIndex in total"
+        <canvas
+          v-for="pageIndex in total"
           class="pdfCore__page"
           :id="`${id}-${pageIndex}`"
           :key="pageIndex"
-          :width="width"></canvas>
+          :width="width"
+        ></canvas>
       </div>
     </div>
 
-    <div class="pdfCore__pagination"
-      :class="{ 'pdfCore__pagination-disabled': page === total || rendering }"
-      @click="next"> <arrow-right /> </div>
+    <div
+      class="pdfCore__pagination"
+      :class="{ 'pdfCore__pagination-disabled': currentPage === total }"
+      @click="next"
+    >
+      <arrow-right />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { inject, watch, watchEffect, toRef, nextTick } from "vue";
+import { inject, watch, ref, toRef, toRefs } from "vue";
 import ArrowLeft from "./assets/ArrowLeft.vue";
 import ArrowRight from "./assets/ArrowRight.vue";
-import { usePdfRender, usePageSwitch, usePageScroll } from './hooks';
+import { usePdfRender, usePageSwitch, usePageScroll } from "./hooks";
 
 const props = defineProps({
   id: {
@@ -37,54 +48,61 @@ const props = defineProps({
   width: {
     type: Number,
     required: false,
-    default: 300
+    default: 300,
   },
   height: {
     type: Number,
     required: false,
   },
   fileSource: {
-    required: true
+    required: true,
   },
   page: {
     type: Number,
     required: false,
-    default: 1
+    default: 1,
   },
   total: {
     type: Number,
     required: true,
-    default: 0
+    default: 0,
   },
   loading: {
     type: Boolean,
     required: true,
-    default: true
-  }
+    default: true,
+  },
 });
 
-const fileSource = toRef(props, 'fileSource');
+const fileSource = toRef(props, "fileSource");
 const { renderPage } = usePdfRender({ ...props, fileSource });
 
 // 首次绘制
-const loading = toRef(props, 'loading');
+const loading = toRef(props, "loading");
 watch(loading, () => {
-  if (!loading.value) {
-    nextTick(() => {
-      renderPage(1).then(renderPage(2));
-    });
+  if (!loading.value && fileSource.value) {
+    renderPage(1).then(renderPage(2));
   }
 });
 
-const { prev, next, page, rendering } = usePageSwitch(props, renderPage);
+const currentPage = ref(props.page);
+watch(props, () => {
+  currentPage.value = props.page;
+});
 
-const updateCurPage = inject('updateCurPage');
-watchEffect(() => updateCurPage(page));
+const { page: initialPage, total } = toRefs(props);
+const { prev, next, page } = usePageSwitch( currentPage, total, renderPage);
 
-const { refScrollContainer } = usePageScroll(page, props.width, props.height);
+const updateCurPage = inject("updateCurPage");
+watch(page, () => updateCurPage(page.value));
 
+const { refScrollContainer } = usePageScroll(
+  currentPage,
+  props.width,
+  props.height
+);
 </script>
-<style lang="less">
+<style lang="scss">
 .pdfCore {
   &__container {
     display: flex;
@@ -97,16 +115,13 @@ const { refScrollContainer } = usePageScroll(page, props.width, props.height);
     overflow: hidden;
     display: flex;
     align-items: center;
+    background-color: rgb(223, 223, 223);
   }
 
   &__pages {
     display: flex;
     flex-flow: row nowrap;
     align-items: center;
-  }
-
-  &__page {
-    background: darkgray;
   }
 
   &__pagination {

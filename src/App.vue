@@ -11,8 +11,8 @@
 import hwPdfViewer from './PdfViewer.vue';
 </script>
 
-<style lang="less">
+<style lang="scss">
 #app {
-  background-color: black;
+  background-color: sandybrown;
 }
 </style>

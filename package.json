@@ -3,7 +3,9 @@
   "version": "1.1.0",
   "private": false,
   "main": "./dist/hw-pdf-viewer.common.js",
-  "files": ["dist/*"],
+  "files": [
+    "dist/*"
+  ],
   "author": {
     "name": "ztf",
     "email": "undefine4080@gmail.com"
@@ -29,6 +31,8 @@
     "jest": "^27.0.5",
     "less": "^4.0.0",
     "less-loader": "^8.0.0",
+    "node-sass": "^8.0.0",
+    "sass-loader": "^13.2.0",
     "vue-template-compiler": "^2.6.14"
   },
   "browserslist": [

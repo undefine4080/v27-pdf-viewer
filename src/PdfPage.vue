@@ -43,12 +43,13 @@ const callback = () => {
 
 useLazyLoad(scrollContainer, refCanvas, callback);
 </script>
-<style lang='less'>
+<style lang='scss'>
 .pdfPage {
     padding: 10px;
 
     &__container {
         position: relative;
+        background-color: rgb(240, 240, 240);
     }
 
     &__selected {
@@ -67,13 +68,13 @@ useLazyLoad(scrollContainer, refCanvas, callback);
         align-items: center;
 
         span {
-            @size: 20px;
+            $size: 20px;
 
             &::before {
                 content: '';
                 display: inline-block;
-                width: @size;
-                height: @size;
+                width: $size;
+                height: $size;
                 border-width: 3px;
                 border-radius: 50%;
                 border-image: linear-gradient(grey, black);

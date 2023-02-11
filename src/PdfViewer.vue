@@ -1,48 +1,48 @@
 <template>
   <div class="pdfViewer">
-    <div class="pdfViewer__selector"
+    <div
+      class="pdfViewer__selector"
       :style="{ width: '180px' }"
-      v-if="selector">
-      <pdf-selector id="pdf-canvas-selector"
+      v-if="selector"
+    >
+      <pdf-selector
+        id="pdf-canvas-selector"
         :width="width"
         :height="height"
         :fileSource="fileSource"
-        :page="page"
+        :page="currentPage"
         :total="total"
-        :loading="loading" />
-
-      <div class="pdfViewer__selector-loading"
-        v-if="loading">
-        <span>文件加载中</span>
-      </div>
+        :loading="loading"
+      />
     </div>
 
-    <div class="pdfViewer__viewer"
-      :style="{ width: width + 88 + 'px', minHeight: height + 50 + 'px' }">
-      <div class="pdfViewer__pageNo">第{{ currentPage }}/{{ total }}页
-      </div>
+    <div
+      class="pdfViewer__viewer"
+      :style="{ width: width + 136 + 'px', minHeight: height + 50 + 'px' }"
+    >
+      <div class="pdfViewer__pageNo">第{{ currentPage }}/{{ total }}页</div>
 
       <div class="pdfViewer__view">
-        <pdf-core id="pdf-canvas-core"
+        <pdf-core
+          id="pdf-canvas-core"
           :width="width"
           :height="height"
           :fileSource="fileSource"
-          :page="page"
+          :page="currentPage"
           :total="total"
-          :loading="loading" />
-
-        <div class="pdfViewer__view-loading"
-          :style="{ width: width + 'px', height: height + 'px' }"
-          v-if="loading">
-          <span>文件加载中</span>
-        </div>
+          :loading="loading"
+        />
       </div>
+    </div>
+
+    <div class="pdfViewer__loading" v-if="loading">
+      <span>文件加载中...</span>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, provide } from "vue";
-import { usePdfSource } from './hooks';
+import { ref, provide, toRefs } from "vue";
+import { usePdfSource } from "./hooks";
 import PdfCore from "./PdfCore.vue";
 import PdfSelector from "./PdfSelector.vue";
 
@@ -50,7 +50,7 @@ const props = defineProps({
   src: {
     type: String,
     required: true,
-    default: '' // pdf 文件路径（本地文件或远程文件）
+    default: "", // pdf 文件路径（本地文件或远程文件）
   },
   width: {
     type: Number,
@@ -64,12 +64,12 @@ const props = defineProps({
   selector: {
     type: Boolean,
     required: false,
-    default: false,  // 启用选择器
+    default: false, // 启用选择器
   },
   selectorPosition: {
     type: String,
     required: false,
-    default: 'left' // pdf 选择器的位置
+    default: "left", // pdf 选择器的位置
   },
   page: {
     type: Number,
@@ -79,41 +79,45 @@ const props = defineProps({
 });
 
 const currentPage = ref(props.page);
-provide('updateCurPage', (num) => currentPage.value = num);
+provide("updateCurPage", (num) => (currentPage.value = num));
 
-const { fileSource, total, loading } = usePdfSource(props.src);
+const { src } = toRefs(props);
+const { fileSource, total, loading } = usePdfSource(src);
 </script>
 
-<style lang="less">
+<style lang="scss">
 .pdfViewer {
   display: flex;
   align-items: center;
   padding: 30px;
+  position: relative;
 
   &__pageNo {
     height: 50px;
     line-height: 50px;
     text-align: center;
-    color: azure;
     user-select: none;
+  }
+
+  &__loading {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: rgb(213, 213, 213);
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   &__viewer {
     position: relative;
+    margin-left: 150px;
   }
 
   &__view {
     position: relative;
-
-    &-loading {
-      position: absolute;
-      left: 44px;
-      top: 0;
-      background: rgb(213, 213, 213);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
   }
 
   &__selector {

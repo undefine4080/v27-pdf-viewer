@@ -1,17 +1,19 @@
 <template>
-  <div class="pdfSelector"
-    ref="refScrollContainer">
-    <div class="pdfSelector__view"
-      :style="{ width: SIZE + 'px', height: height + 'px' }">
-      <div class="pdfSelector__pages"
-        :style="{ width: SIZE + 'px' }">
-        <pdf-page v-for="pageIndex in total"
+  <div class="pdfSelector" ref="refScrollContainer">
+    <div
+      class="pdfSelector__view"
+      :style="{ width: '180px', height: height + 'px' }"
+    >
+      <div class="pdfSelector__pages" :style="{ width: SIZE + 'px' }">
+        <pdf-page
+          v-for="pageIndex in total"
           :key="pageIndex"
           :id="`${id}-${pageIndex}`"
           :page-index="pageIndex"
           :scroll-container="refScrollContainer"
-          :selected-page="page"
-          @click.native="selectPage(pageIndex)" />
+          :selected-page="currentPage"
+          @click.native="selectPage(pageIndex)"
+        />
       </div>
     </div>
   </div>
@@ -19,7 +21,7 @@
 
 <script setup>
 import { ref, toRef, inject, watch, provide } from "vue";
-import { usePdfRender } from './hooks';
+import { usePdfRender } from "./hooks";
 import PdfPage from "./PdfPage.vue";
 
 const props = defineProps({
@@ -30,70 +32,77 @@ const props = defineProps({
   selectorPosition: {
     type: String,
     required: false,
-    default: 'left' // pdf 选择器的位置
+    default: "left", // pdf 选择器的位置
   },
   fileSource: {
-    required: true
+    required: true,
   },
   page: {
     type: Number,
     required: false,
-    default: 1
+    default: 1,
   },
   total: {
     type: Number,
     required: true,
-    default: 0
+    default: 0,
   },
   width: {
     type: Number,
     required: false,
-    default: 300
+    default: 150,
   },
   height: {
     type: Number,
     required: false,
-    default: 600
+    default: 220,
   },
   loading: {
     type: Boolean,
     required: true,
-    default: true
-  }
+    default: true,
+  },
 });
 
 const refScrollContainer = ref();
 
 const SIZE = 180;
-let direction = 'vertical';
-if (props.selectorPosition === 'left' || props.selectorPosition === 'right') {
-  direction = 'vertical';
-} else if (props.selectorPosition === 'top' || props.selectorPosition === 'bottom') {
-  direction = 'horizontal';
+let direction = "vertical";
+if (props.selectorPosition === "left" || props.selectorPosition === "right") {
+  direction = "vertical";
+} else if (
+  props.selectorPosition === "top" ||
+  props.selectorPosition === "bottom"
+) {
+  direction = "horizontal";
 } else {
-  console.warn("the selectorPosition may not correct, it must include 'left','right','top','bottom' please check the value");
+  console.warn(
+    "the selectorPosition may not correct, it must include 'left','right','top','bottom' please check the value"
+  );
 }
 
-const fileSource = toRef(props, 'fileSource');
+const fileSource = toRef(props, "fileSource");
 const { renderPage } = usePdfRender({
   id: props.id,
-  height: direction === 'horizontal' ? (SIZE - 30) : undefined,
-  width: direction === 'vertical' ? (SIZE - 30) : undefined,
-  fileSource
+  height: 220,
+  width: 150,
+  fileSource,
 });
 
-provide('renderPage', renderPage);
+provide("renderPage", renderPage);
 
-const page = ref(props.page);
-const selectPage = pageIndex => {
-  page.value = pageIndex;
+const currentPage = ref(props.page);
+watch(props, () => (currentPage.value = props.page));
+
+const selectPage = (pageIndex) => {
+  currentPage.value = pageIndex;
 };
 
-const updateCurPage = inject('updateCurPage');
-watch(page, () => updateCurPage(page.value));
+const updateCurPage = inject("updateCurPage");
+watch(currentPage, () => updateCurPage(currentPage.value));
 </script>
 
-<style lang="less">
+<style lang="scss">
 .pdfSelector {
   overflow: hidden;
 
