@@ -36,7 +36,7 @@
     </div>
 
     <div class="pdfViewer__loading" v-if="loading">
-      <span>文件加载中...</span>
+      <span>文件加载中</span>
     </div>
   </div>
 </template>
@@ -83,6 +83,7 @@ provide("updateCurPage", (num) => (currentPage.value = num));
 
 const { src } = toRefs(props);
 const { fileSource, total, loading } = usePdfSource(src);
+
 </script>
 
 <style lang="scss">
@@ -105,10 +106,30 @@ const { fileSource, total, loading } = usePdfSource(src);
     position: absolute;
     left: 0;
     top: 0;
-    background: rgb(213, 213, 213);
+    background: rgb(224, 224, 224);
     display: flex;
     justify-content: center;
     align-items: center;
+
+    span {
+      display: block;
+      $size: 20px;
+      color: rgb(96, 96, 96);
+      font-size: 20px;
+
+      &::before {
+        content: "";
+        display: block;
+        width: $size;
+        height: $size;
+        border-radius: 50%;
+        position: relative;
+        left: calc(50% - 10px);
+        top: -5px;
+        border: 3px dashed rgb(180, 180, 180);
+        animation: 2s linear 0s infinite running rotate;
+      }
+    }
   }
 
   &__viewer {
@@ -122,18 +143,16 @@ const { fileSource, total, loading } = usePdfSource(src);
 
   &__selector {
     position: relative;
+  }
+}
 
-    &-loading {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      left: 0;
-      top: 0;
-      background: rgb(213, 213, 213);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

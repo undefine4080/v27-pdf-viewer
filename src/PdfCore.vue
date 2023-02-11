@@ -110,7 +110,7 @@ const { refScrollContainer } = usePageScroll(currentPage, props.width);
     overflow: hidden;
     display: flex;
     align-items: center;
-    background-color: rgb(223, 223, 223);
+    background-color: white;
   }
 
   &__pages {

@@ -9,7 +9,7 @@
     </canvas>
 
     <div class="pdfPage__loading" v-if="loading">
-      <span>加载中...</span>
+      <span>加载中</span>
     </div>
   </div>
 </template>
@@ -57,9 +57,15 @@ watch(props, () => {
 .pdfPage {
   padding: 10px;
 
+  &:hover {
+    cursor: pointer;
+  }
+
   &__container {
     position: relative;
-    background-color: rgb(240, 240, 240);
+    display: flex;
+    background-color: #f0f0f0;
+    justify-content: center;
   }
 
   &__selected {
@@ -67,27 +73,31 @@ watch(props, () => {
   }
 
   &__loading {
-    width: 90%;
+    width: 150px;
     height: 90%;
     position: absolute;
-    left: 5%;
     top: 5%;
-    background-color: rgb(248, 248, 248);
+    background-color: #f8f8f8;
     display: flex;
     justify-content: center;
     align-items: center;
 
     span {
+      display: block;
       $size: 20px;
+      color: rgb(169, 169, 169);
+      font-size: 14px;
 
       &::before {
         content: "";
-        display: inline-block;
+        display: block;
         width: $size;
         height: $size;
-        border-width: 3px;
         border-radius: 50%;
-        border-image: linear-gradient(grey, black);
+        position: relative;
+        left: calc(50% - 10px);
+        top: -5px;
+        border: 3px dashed rgb(180, 180, 180);
         animation: 2s linear 0s infinite running rotate;
       }
     }
