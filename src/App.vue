@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import hwPdfViewer from './PdfViewer.vue';
+// import hwPdfViewer from './PdfViewer.vue';
 </script>
 
 <style lang="scss">
