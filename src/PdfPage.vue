@@ -1,14 +1,13 @@
 <template>
   <div class="pdfPage__container">
-    <canvas
-      :id="id"
+    <canvas :id="id"
       ref="refCanvas"
       class="pdfPage"
-      :class="{ pdfPage__selected: !loading && selectedPage === pageIndex }"
-    >
+      :class="{ pdfPage__selected: !loading && selectedPage === pageIndex }">
     </canvas>
 
-    <div class="pdfPage__loading" v-if="loading">
+    <div class="pdfPage__loading"
+      v-if="loading">
       <span>加载中</span>
     </div>
   </div>
@@ -49,7 +48,7 @@ const { isInViewport } = useInViewport(scrollContainer, refCanvas);
 const scrollToSelectedPage = inject("scrollToSelectedPage");
 watch(props, () => {
   if (props.selectedPage === props.pageIndex) {
-    !isInViewport.value && scrollToSelectedPage(props.selectedPage);
+    !isInViewport.value && scrollToSelectedPage(props.selectedPage, refCanvas.value.clientHeight);
   }
 });
 </script>

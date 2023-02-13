@@ -1,42 +1,41 @@
 <template>
   <div class="pdfViewer">
-    <div
-      class="pdfViewer__selector"
+    <div class="pdfViewer__selector"
       :style="{ width: '180px' }"
-      v-if="selector"
-    >
-      <pdf-selector
-        id="pdf-canvas-selector"
+      v-if="selector">
+      <pdf-selector id="pdf-canvas-selector"
         :width="width"
         :height="height"
         :fileSource="fileSource"
         :page="currentPage"
         :total="total"
-        :loading="loading"
-      />
+        :loading="loading" />
     </div>
 
-    <div
-      class="pdfViewer__viewer"
-      :style="{ width: width + 136 + 'px', minHeight: height + 50 + 'px' }"
-    >
+    <div class="pdfViewer__viewer"
+      :style="{ width: width + 136 + 'px', minHeight: height + 50 + 'px' }">
       <div class="pdfViewer__pageNo">第{{ currentPage }}/{{ total }}页</div>
 
       <div class="pdfViewer__view">
-        <pdf-core
-          id="pdf-canvas-core"
+        <pdf-core id="pdf-canvas-core"
           :width="width"
           :height="height"
           :fileSource="fileSource"
           :page="currentPage"
           :total="total"
-          :loading="loading"
-        />
+          :loading="loading" />
       </div>
     </div>
 
-    <div class="pdfViewer__loading" v-if="loading">
+    <div class="pdfViewer__loading"
+      v-if="loading === true">
       <span>文件加载中</span>
+    </div>
+
+    <div class="pdfViewer__loading"
+      :class="{'pdfViewer__loading-error': loading === undefined}"
+      v-if="loading === undefined">
+      <span>文件加载失败，请刷新页面</span>
     </div>
   </div>
 </template>
@@ -128,6 +127,14 @@ const { fileSource, total, loading } = usePdfSource(src);
         top: -5px;
         border: 3px dashed rgb(180, 180, 180);
         animation: 2s linear 0s infinite running rotate;
+      }
+    }
+
+    &-error {
+      span {
+        &::before {
+          display: none;
+        }
       }
     }
   }

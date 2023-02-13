@@ -1,23 +1,18 @@
 <template>
-  <div class="pdfSelector" ref="refViewContainer">
-    <div
-      class="pdfSelector__view"
+  <div class="pdfSelector"
+    ref="refViewContainer">
+    <div class="pdfSelector__view"
       ref="refScrollContainer"
-      :style="{ width: PREVIEW_SIZE.width + 'px', height: height + 'px' }"
-    >
-      <div
-        class="pdfSelector__pages"
-        :style="{ width: PREVIEW_SIZE.width + 'px' }"
-      >
-        <pdf-page
-          v-for="pageIndex in total"
+      :style="{ width: PREVIEW_SIZE.width + 'px', height: height + 'px' }">
+      <div class="pdfSelector__pages"
+        :style="{ width: PREVIEW_SIZE.width + 'px' }">
+        <pdf-page v-for="pageIndex in total"
           :key="pageIndex"
           :id="`${id}-${pageIndex}`"
           :page-index="pageIndex"
           :scroll-container="refViewContainer"
           :selected-page="currentPage"
-          @click.native="selectPage(pageIndex)"
-        />
+          @click.native="selectPage(pageIndex)" />
       </div>
     </div>
   </div>
@@ -109,12 +104,11 @@ watch(props, () => (currentPage.value = props.page));
 const updateCurPage = inject("updateCurPage");
 watch(currentPage, () => updateCurPage(currentPage.value));
 
-const scrollToSelectedPage = (pageIndex) => {
+const scrollToSelectedPage = (pageIndex, frame) => {
   const scrollConfig = {
-    top: PREVIEW_SIZE.height * (pageIndex - 1) - PREVIEW_SIZE.height,
+    top: frame * pageIndex - 2 * frame,
     behavior: "smooth",
   };
-
   refScrollContainer.value.scrollTo(scrollConfig);
 };
 provide("scrollToSelectedPage", scrollToSelectedPage);

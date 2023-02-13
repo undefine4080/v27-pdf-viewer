@@ -7,14 +7,13 @@ import { _debounce } from "./util";
 
 function usePdfSource(src) {
   const fileSource = ref(); // 文件流
-  const loading = ref(); // 源文件加载状态
+  const loading = ref(true); // 源文件加载状态 true-加载中 false-加载完成 undefined-加载失败
   const total = ref(0); // 总页数
 
   // 读取文件流
   const readSource = (source) => {
     // 保存 pdf 文件流
     fileSource.value = source;
-
     // 获取pdf文件的总页数
     total.value = fileSource.value.numPages;
 
@@ -27,22 +26,24 @@ function usePdfSource(src) {
 
     // 设定pdfjs的 workerSrc 参数
     PdfJs.GlobalWorkerOptions.workerSrc = workerSrc;
-    const fileSrc = isRef(src) ? src.value : src;
-    const loadingTask = PdfJs.getDocument(fileSrc);
 
     // 加载 pdf 文件流
-    loadingTask.promise.then(readSource).catch((error) => {
-      loading.value = false;
-      throw error;
-    });
+    const fileSrc = isRef(src) ? src.value : src;
+    if (fileSrc) {
+      const loadingTask = PdfJs.getDocument(fileSrc);
+      loadingTask.promise.then(readSource).catch((error) => {
+        loading.value = undefined;
+        throw error;
+      });
+    } else {
+      loading.value = undefined;
+    }
   };
 
   watch(
     src,
     () => {
-      if (src.value) {
-        fetchFileSource();
-      }
+      fetchFileSource();
     },
     { immediate: true }
   );
@@ -165,6 +166,17 @@ function usePdfRender(options) {
 function usePageSwitch(initialPage, total, callback) {
   const page = ref(initialPage.value);
   const rendering = ref(false);
+  const alreadyRenderedPages = ref(new Set([1, 2]));
+
+  const render = pageNum => {
+    alreadyRenderedPages.value.add(pageNum);
+    setTimeout(() => {
+      rendering.value = true;
+      callback(pageNum).then(() => {
+        rendering.value = false;
+      });
+    }, 500);
+  };
 
   const prev = _debounce(() => {
     if (!rendering.value) {
@@ -180,34 +192,19 @@ function usePageSwitch(initialPage, total, callback) {
 
   const to = () => {
     page.value = initialPage.value;
-
     if (!alreadyRenderedPages.value.has(initialPage.value)) {
-      alreadyRenderedPages.value.add(initialPage.value);
-      rendering.value = true;
-      callback(initialPage.value).then(() => {
-        rendering.value = false;
-      });
+      render(initialPage.value);
     }
   };
-
-  const alreadyRenderedPages = ref(new Set([1, 2]));
 
   const renderPage = () => {
     // 渲染当前页
     if (page.value > 1 && !alreadyRenderedPages.value.has(page.value)) {
-      alreadyRenderedPages.value.add(page.value);
-      rendering.value = true;
-      callback(page.value).then(() => {
-        rendering.value = false;
-      });
+      render(page.value);
     } else {
       // 渲染下一页
       if (!alreadyRenderedPages.value.has(page.value + 1)) {
-        alreadyRenderedPages.value.add(page.value + 1);
-        rendering.value = true;
-        callback(page.value + 1).then(() => {
-          rendering.value = false;
-        });
+        render(page.value + 1);
       }
     }
   };
@@ -222,7 +219,6 @@ function usePageSwitch(initialPage, total, callback) {
     next,
     page,
     rendering,
-    alreadyRenderedPages,
   };
 }
 

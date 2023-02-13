@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <hw-pdf-viewer src="./test.pdf"
+    <hw-pdf-viewer src=""
       :width="800"
       :height="1200"
       :selector="true"></hw-pdf-viewer>
@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-// import hwPdfViewer from './PdfViewer.vue';
+import hwPdfViewer from './PdfViewer.vue';
 </script>
 
 <style lang="scss">
