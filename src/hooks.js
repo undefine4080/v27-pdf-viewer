@@ -37,6 +37,7 @@ function usePdfSource(src) {
       });
     } else {
       loading.value = undefined;
+      throw new TypeError('src requires a string but received nothing');
     }
   };
 
@@ -203,7 +204,7 @@ function usePageSwitch(initialPage, total, callback) {
       render(page.value);
     } else {
       // 渲染下一页
-      if (!alreadyRenderedPages.value.has(page.value + 1)) {
+      if ((page.value + 1) <= total.value && !alreadyRenderedPages.value.has(page.value + 1)) {
         render(page.value + 1);
       }
     }
