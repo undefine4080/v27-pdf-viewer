@@ -3,7 +3,7 @@ import * as PdfJs from "pdfjs-dist/legacy/build/pdf.js";
 import { _debounce } from "./util";
 const workerSrc = require("pdfjs-dist/build/pdf.worker.entry");
 
-function useScaling(enable) {
+function useScaling(enable, callback) {
   const maxScaleFactor = 2.5;
   const minScaleFactor = 1.0;
 
@@ -49,6 +49,15 @@ function useScaling(enable) {
 
   const scaleCanvas = () => {
     refScaleContainer.value.style.transform = `scale(${scaleFactor.value})`;
+
+    const { clientWidth, clientHeight } = refScaleContainer.value;
+
+    const newWidth = Math.floor(clientWidth * scaleFactor.value);
+    const newHeight = Math.floor(clientHeight * scaleFactor.value);
+
+    // setTimeout(() => {
+    //   callback(newWidth, newHeight);
+    // }, 300);
   };
 
   const resetCanvas = () => {
@@ -138,7 +147,7 @@ function usePdfSource(src) {
 }
 
 function usePdfRender(options) {
-  const { id, width, height, fileSource } = options;
+  let { id, width, height, fileSource } = options;
 
   const pdfScale = ref(1.0); // 初始缩放比
   const alreadyRenderedPages = ref(new Set());
@@ -220,8 +229,8 @@ function usePdfRender(options) {
     return context;
   };
 
-  // 绘制页面
-  const renderPage = (pageNum = 1, state) => {
+  // 懒渲染页面
+  const lazyRenderPage = (pageNum = 1, state) => {
     if (alreadyRenderedPages.value.has(pageNum)) return;
 
     const source = isRef(fileSource) ? fileSource.value : fileSource;
@@ -240,8 +249,33 @@ function usePdfRender(options) {
     });
   };
 
+  // 重渲染当前页面
+  const reRenderPage = (width, height, pageNum) => {
+    width = width;
+    height = height;
+
+    const source = isRef(fileSource) ? fileSource.value : fileSource;
+
+    return source.getPage(pageNum).then((page) => {
+      const context = createContext(page, pageNum);
+      window.requestAnimationFrame(() => page.render(context));
+    });
+  };
+
+  // 渲染指定页面
+  const renderPage = (pageNum) => {
+    const source = isRef(fileSource) ? fileSource.value : fileSource;
+
+    return source.getPage(pageNum).then((page) => {
+      const context = createContext(page, pageNum);
+      window.requestAnimationFrame(() => page.render(context));
+    });
+  };
+
   return {
-    renderPage,
+    lazyRenderPage,
+    reRenderPage,
+    renderPage
   };
 }
 

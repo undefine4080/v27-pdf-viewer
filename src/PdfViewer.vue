@@ -123,6 +123,7 @@ const closeFullscreen = () => (isFullscreen.value = false);
     align-items: center;
     padding: 30px;
     position: relative;
+    overflow: hidden;
 
     &__toolBar {
         height: 50px;

@@ -56,7 +56,7 @@ const props = defineProps({
 
 const { fileSource, loading, page, enable } = toRefs(props);
 
-const { renderPage } = usePdfRender({
+const { renderPage, reRenderPage } = usePdfRender({
     id,
     height: 900,
     fileSource,
@@ -70,8 +70,13 @@ watch([loading, enable], () => {
     }
 });
 
+// todo: 解决 css 缩放不清晰的问题，采用重渲染 pdf 的方式
+const freshPage = (width, height) => {
+    // return reRenderPage(width, height, page.value);
+};
+
 const { refScaleContainer, resetCanvas, minScale, maxScale, refTips } =
-    useScaling(enable);
+    useScaling(enable, freshPage);
 </script>
 <style lang="scss">
 .pdfFullscreen {
