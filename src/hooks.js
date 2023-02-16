@@ -1,9 +1,90 @@
-import { ref, watch, onMounted, onBeforeUnmount, toRefs, isRef } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, computed, toRefs, isRef } from "vue";
 import * as PdfJs from "pdfjs-dist/legacy/build/pdf.js";
-
+import { _debounce } from "./util";
 const workerSrc = require("pdfjs-dist/build/pdf.worker.entry");
 
-import { _debounce } from "./util";
+function useScaling(enable) {
+  const maxScaleFactor = 2.5;
+  const minScaleFactor = 1.0;
+
+  const scaleFactor = ref(1.0);
+  const refScaleContainer = ref();
+  const maxScale = ref(false);
+  const minScale = ref(false);
+  const refTips = ref();
+
+  const showTips = () => {
+    refTips.value.style.visibility = 'visible';
+    setTimeout(() => {
+      refTips.value.style.visibility = 'hidden';
+    }, 3000);
+  };
+
+  const scaling = (event) => {
+    const { deltaY } = event;
+    const wheelValue = deltaY > 0 ? 0.1 : -0.1;
+
+    if (scaleFactor.value >= maxScaleFactor) {
+      maxScale.value = true;
+    }
+
+    if (scaleFactor.value <= minScaleFactor) {
+      minScale.value = true;
+    }
+
+    if (maxScale.value && wheelValue < 0) {
+      scaleFactor.value += wheelValue;
+      maxScale.value = minScale.value = false;
+    } else if (minScale.value && wheelValue > 0) {
+      scaleFactor.value += wheelValue;
+      maxScale.value = minScale.value = false;
+    } else if (!maxScale.value && !minScale.value) {
+      scaleFactor.value += wheelValue;
+    }
+
+    if (maxScale.value || minScale.value) {
+      showTips();
+    }
+  };
+
+  const scaleCanvas = () => {
+    refScaleContainer.value.style.transform = `scale(${scaleFactor.value})`;
+  };
+
+  const resetCanvas = () => {
+    refScaleContainer.value.style.transform = 'scale(1)';
+    scaleFactor.value = 1.0;
+    minScale.value = false;
+    maxScale.value = false;
+  };
+
+  onMounted(() => {
+    refScaleContainer.value.addEventListener('wheel', scaling);
+  });
+
+  onBeforeUnmount(() => {
+    refScaleContainer.value.removeEventListener('wheel', scaling);
+  });
+
+  watch(enable, () => {
+    if (enable.value) {
+      setTimeout(showTips, 1000);
+    } else {
+      resetCanvas();
+    }
+  });
+
+  watch(scaleFactor, scaleCanvas);
+
+  return {
+    refScaleContainer,
+    scaleFactor,
+    minScale,
+    maxScale,
+    refTips,
+    resetCanvas,
+  };
+}
 
 function usePdfSource(src) {
   const fileSource = ref(); // 文件流
@@ -303,4 +384,5 @@ export {
   usePageScroll,
   useLazyLoad,
   useInViewport,
+  useScaling
 };

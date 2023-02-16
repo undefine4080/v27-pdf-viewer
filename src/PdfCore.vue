@@ -4,39 +4,44 @@
     <div class="pdfCore__pagination"
       :class="{ 'pdfCore__pagination-disabled': currentPage === 1 }"
       @click="prev">
-      <arrow-left />
+      <icon :svg="ArrowLeft" />
     </div>
 
-    <div class="pdfCore__view"
-      ref="refScrollContainer"
+    <div class="pdfCore__window"
       :style="{ width: width + 'px' }">
-      <div class="pdfCore__pages">
-        <canvas v-for="pageIndex in total"
-          class="pdfCore__page"
-          :id="`${id}-${pageIndex}`"
-          :key="pageIndex"
-          :width="width"></canvas>
-      </div>
+      <div class="pdfCore__view"
+        ref="refScrollContainer"
+        :style="{ width: width + 'px' }">
+        <div class="pdfCore__pages">
+          <canvas v-for="pageIndex in total"
+            class="pdfCore__page"
+            :id="`${id}-${pageIndex}`"
+            :key="pageIndex"
+            :width="width"></canvas>
+        </div>
 
-      <div class="pdfCore__loading"
-        :style="{ width: width + 'px', height: height + 'px' }"
-        v-if="rendering">
-        <span>加载中</span>
+        <div class="pdfCore__loading"
+          :style="{ width: width + 'px', height: height + 'px' }"
+          v-if="rendering">
+          <span>加载中</span>
+        </div>
       </div>
     </div>
 
     <div class="pdfCore__pagination"
       :class="{ 'pdfCore__pagination-disabled': currentPage === total }"
+      :alt="currentPage === total ? '已经是最后一页啦' : ''"
       @click="next">
-      <arrow-right />
+      <icon :svg="ArrowRight" />
     </div>
-  </div>
+</div>
 </template>
 
 <script setup>
 import { inject, watch, ref, toRef, toRefs } from "vue";
-import ArrowLeft from "./assets/ArrowLeft.vue";
-import ArrowRight from "./assets/ArrowRight.vue";
+import Icon from "./Icon.vue";
+import ArrowLeft from "./assets/icon/arrowLeft.svg";
+import ArrowRight from "./assets/icon/arrowRight.svg";
 import { usePdfRender, usePageSwitch, usePageScroll } from "./hooks";
 
 const props = defineProps({
@@ -117,6 +122,10 @@ const { refScrollContainer } = usePageScroll(currentPage, props.width);
     background-color: white;
   }
 
+  &__window {
+    overflow: auto;
+  }
+
   &__pages {
     display: flex;
     flex-flow: row nowrap;
@@ -125,12 +134,8 @@ const { refScrollContainer } = usePageScroll(currentPage, props.width);
 
   &__pagination {
     padding: 0 10px;
-
-    svg {
-      position: relative;
-      top: calc(50% - 10px);
-      cursor: pointer;
-    }
+    display: flex;
+    align-items: center;
 
     &-disabled {
       cursor: not-allowed;

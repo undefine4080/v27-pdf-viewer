@@ -1,5 +1,5 @@
-const { defineConfig } = require("@vue/cli-service");
-
-module.exports = defineConfig({
-
-});
+module.exports = {
+    configureWebpack: {
+        externals: ['pdfjs-dist']
+    }
+};

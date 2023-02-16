@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <hw-pdf-viewer src="./file/test.pdf"
+    <hw-pdf-viewer src="./file/small.pdf"
       :width="800"
       :height="1200"
       :selector="true"></hw-pdf-viewer>
