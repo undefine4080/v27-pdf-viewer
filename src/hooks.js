@@ -1,4 +1,4 @@
-import { ref, watch, onMounted, onBeforeUnmount, computed, toRefs, isRef } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, nextTick, isRef } from "vue";
 import * as PdfJs from "pdfjs-dist/legacy/build/pdf.js";
 import { _debounce } from "./util";
 const workerSrc = require("pdfjs-dist/build/pdf.worker.entry");
@@ -6,12 +6,16 @@ const workerSrc = require("pdfjs-dist/build/pdf.worker.entry");
 function useScaling(enable, callback) {
   const maxScaleFactor = 2.5;
   const minScaleFactor = 1.0;
+  const defaultContainerHeight = 900;
 
   const scaleFactor = ref(1.0);
   const refScaleContainer = ref();
   const maxScale = ref(false);
   const minScale = ref(false);
   const refTips = ref();
+
+  const scaleRendering = ref();
+  const initialContainerWidth = ref();
 
   const showTips = () => {
     refTips.value.style.visibility = 'visible';
@@ -47,17 +51,39 @@ function useScaling(enable, callback) {
     }
   };
 
+  const scaleRender = _debounce((newWidth) => {
+    scaleRendering.value = true;
+    callback(newWidth).then(() => {
+      scaleRendering.value = false;
+    });
+  }, 500);
+
   const scaleCanvas = () => {
+    // 视觉缩放（不会修改真实 dom 大小）
     refScaleContainer.value.style.transform = `scale(${scaleFactor.value})`;
 
-    const { clientWidth, clientHeight } = refScaleContainer.value;
+    // 应用 dom 元素真实尺寸
+    nextTick(() => {
+      if (!initialContainerWidth.value) {
+        const { clientWidth } = refScaleContainer.value;
+        initialContainerWidth.value = clientWidth;
+      }
 
-    const newWidth = Math.floor(clientWidth * scaleFactor.value);
-    const newHeight = Math.floor(clientHeight * scaleFactor.value);
+      const width = Math.floor(initialContainerWidth.value * scaleFactor.value);
 
-    // setTimeout(() => {
-    //   callback(newWidth, newHeight);
-    // }, 300);
+      const height = Math.floor(defaultContainerHeight * scaleFactor.value);
+
+      refScaleContainer.value.style.width = `${width}px`;
+      refScaleContainer.value.style.height = `${height}px`;
+    });
+
+    // 等 dom 元素真实尺寸产生缩放后，重渲染 canvas
+    nextTick(() => {
+      // 以 width 为基准
+      const newWidth = Math.floor(initialContainerWidth.value * scaleFactor.value);
+
+      scaleRender(newWidth);
+    });
   };
 
   const resetCanvas = () => {
@@ -147,6 +173,8 @@ function usePdfRender(options) {
 
   const pdfScale = ref(1.0); // 初始缩放比
   const alreadyRenderedPages = ref(new Set());
+  const iWidth = ref(width);
+  const iHeight = ref(height);
 
   // 计算画布尺寸
   const calcCanvasSize = (page) => {
@@ -158,29 +186,29 @@ function usePdfRender(options) {
     let applyWidth, applyHeight, applyRatio, applyViewport;
 
     // 计算主窗口应用尺寸
-    if (width && !height) {
-      applyWidth = width;
-      applyRatio = width / rawWidth;
+    if (iWidth.value && !iHeight.value) {
+      applyWidth = iWidth.value;
+      applyRatio = iWidth.value / rawWidth;
       applyHeight = rawHeight * applyRatio;
-    } else if (height && !width) {
-      applyHeight = height;
-      applyRatio = height / rawHeight;
+    } else if (iHeight.value && !iWidth.value) {
+      applyHeight = iHeight.value;
+      applyRatio = iHeight.value / rawHeight;
       applyWidth = rawWidth * applyRatio;
-    } else if (width && height) {
-      if (width > height) {
-        applyHeight = height;
-        applyRatio = height / rawHeight;
+    } else if (iWidth.value && iHeight.value) {
+      if (iWidth.value > iHeight.value) {
+        applyHeight = iHeight.value;
+        applyRatio = iHeight.value / rawHeight;
         applyWidth = rawWidth * applyRatio;
-      } else if (width < height) {
-        applyWidth = width;
-        applyRatio = width / rawWidth;
+      } else if (iWidth.value < iHeight.value) {
+        applyWidth = iWidth.value;
+        applyRatio = iWidth.value / rawWidth;
         applyHeight = rawHeight * applyRatio;
       } else {
-        applyWidth = width;
-        applyHeight = height;
-        applyRatio = width / rawWidth;
+        applyWidth = iWidth.value;
+        applyHeight = iHeight.value;
+        applyRatio = iWidth.value / rawWidth;
       }
-    } else if (!width && !height) {
+    } else if (!iWidth.value && !iHeight) {
       applyRatio = pdfScale.value;
       [applyWidth, applyHeight] = [rawWidth, rawHeight];
     }
@@ -246,9 +274,9 @@ function usePdfRender(options) {
   };
 
   // 重渲染当前页面
-  const reRenderPage = (width, height, pageNum) => {
-    width = width;
-    height = height;
+  const reRenderPage = (pageNum, width, height,) => {
+    iWidth.value = width;
+    iHeight.value = height;
 
     const source = isRef(fileSource) ? fileSource.value : fileSource;
 

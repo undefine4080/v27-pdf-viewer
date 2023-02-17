@@ -1,30 +1,34 @@
 <template>
     <div class="pdfFullscreen" v-show="enable">
-        <canvas
-            class="pdfFullscreen__view"
-            :id="`${id}-${page}`"
-            ref="refScaleContainer"
-        ></canvas>
+        <div class="pdfFullscreen__container">
+            <canvas
+                class="pdfFullscreen__view"
+                :id="`${id}-${page}`"
+                ref="refScaleContainer"
+            ></canvas>
 
-        <div class="pdfFullscreen__toolbar">
-            <div class="pdfFullscreen__toolbar-item" @click="resetCanvas">
-                <icon icon="reset" :size="24" />
-                <span>复原</span>
+            <div class="pdfFullscreen__toolbar">
+                <div class="pdfFullscreen__toolbar-item" @click="resetCanvas">
+                    <icon icon="reset" :size="24" />
+                    <span>复原</span>
+                </div>
             </div>
+
+            <div class="pdfFullscreen__close" @click="$emit('close')">
+                <icon icon="close" :size="24" />
+                <span>关闭</span>
+            </div>
+
+            <p class="pdfFullscreen__scaleTips" ref="refTips">
+                <span v-show="minScale">已缩放到最小级别，不能再缩放</span>
+
+                <span v-show="maxScale">已缩放到最大级别，不能再缩放</span>
+
+                <span v-show="!maxScale && !minScale">
+                    请划动鼠标滚轮进行缩放
+                </span>
+            </p>
         </div>
-
-        <div class="pdfFullscreen__close" @click="$emit('close')">
-            <icon icon="close" :size="24" />
-            <span>关闭</span>
-        </div>
-
-        <p class="pdfFullscreen__scaleTips" ref="refTips">
-            <span v-show="minScale">已缩放到最小级别，不能再缩放</span>
-
-            <span v-show="maxScale">已缩放到最大级别，不能再缩放</span>
-
-            <span v-show="!maxScale && !minScale">请划动鼠标滚轮进行缩放</span>
-        </p>
     </div>
 </template>
 
@@ -67,13 +71,22 @@ watch([loading, enable], () => {
     }
 });
 
-// todo: 解决 css 缩放不清晰的问题，采用重渲染 pdf 的方式
+// 重绘 canvas ，实现无损缩放
 const freshPage = (width, height) => {
-    // return reRenderPage(width, height, page.value);
+    return reRenderPage(page.value, width, height);
 };
 
 const { refScaleContainer, resetCanvas, minScale, maxScale, refTips } =
     useScaling(enable, freshPage);
+
+// 全屏后禁用外部滚动条
+watch(enable, () => {
+    if (enable.value) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = 'unset';
+    }
+});
 </script>
 <style lang="scss">
 .pdfFullscreen {
@@ -82,11 +95,18 @@ const { refScaleContainer, resetCanvas, minScale, maxScale, refTips } =
     height: 100vh;
     background-color: rgb(37, 37, 37);
     z-index: 5000;
-    overflow: auto;
+    overflow: hidden;
     left: 0;
     top: 0;
-    display: flex;
-    justify-content: center;
+
+    &__container {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
 
     &__scaleTips {
         position: fixed;
