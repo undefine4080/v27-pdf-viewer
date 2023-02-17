@@ -8,13 +8,13 @@
 
         <div class="pdfFullscreen__toolbar">
             <div class="pdfFullscreen__toolbar-item" @click="resetCanvas">
-                <icon :svg="resetIcon" :size="24" />
+                <icon icon="reset" :size="24" />
                 <span>复原</span>
             </div>
         </div>
 
         <div class="pdfFullscreen__close" @click="$emit('close')">
-            <icon :svg="closeIcon" :size="24" />
+            <icon icon="close" :size="24" />
             <span>关闭</span>
         </div>
 
@@ -31,8 +31,6 @@
 <script setup>
 import { watch, toRefs } from 'vue';
 import { usePdfRender, useScaling } from './hooks';
-import resetIcon from './assets/icon/reset.svg';
-import closeIcon from './assets/icon/close.svg';
 import Icon from './Icon.vue';
 
 const id = 'pdf-fullscreen';

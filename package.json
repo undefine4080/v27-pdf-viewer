@@ -1,6 +1,6 @@
 {
   "name": "hw-pdf-viewer",
-  "version": "1.4.1",
+  "version": "1.4.6",
   "private": false,
   "main": "./dist/hw-pdf-viewer.umd.min.js",
   "files": [
@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
-    "hw-pdf-viewer": "^1.2.0",
     "pdfjs-dist": "^3.1.81",
     "vue": "2.7.14"
   },

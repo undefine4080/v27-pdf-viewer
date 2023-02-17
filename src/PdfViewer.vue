@@ -27,7 +27,7 @@
                 第{{ currentPage }}/{{ total }}页
 
                 <span @click="isFullscreen = true">
-                    <icon :svg="fullscreenIcon" :size="30" />
+                    <icon icon="fullscreen" :size="30" />
                     全屏查看
                 </span>
             </div>
@@ -72,7 +72,6 @@ import { usePdfSource } from './hooks';
 import PdfCore from './PdfCore.vue';
 import PdfSelector from './PdfSelector.vue';
 import Icon from './Icon.vue';
-import fullscreenIcon from './assets/icon/fullscreen.svg';
 import Fullscreen from './Fullscreen.vue';
 
 const props = defineProps({
