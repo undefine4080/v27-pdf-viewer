@@ -45,16 +45,16 @@
             </div>
         </div>
 
-        <div class="pdfViewer__loading" v-if="loading === true">
-            <span>文件加载中</span>
-        </div>
-
         <div
             class="pdfViewer__loading"
-            :class="{ 'pdfViewer__loading-error': loading === undefined }"
-            v-if="loading === undefined"
+            v-if="loading !== false"
+            :class="{ 'pdfViewer__loading-error': !loading }"
         >
-            <span>文件加载失败，请刷新页面</span>
+            <span v-show="loading === true">文件加载中</span>
+
+            <span v-show="loading === undefined">文件加载失败，请刷新页面</span>
+
+            <span v-show="loading === null">文件加载失败，路径不存在</span>
         </div>
 
         <fullscreen

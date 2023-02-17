@@ -72,7 +72,6 @@ const props = defineProps({
     default: 0,
   },
   loading: {
-    type: Boolean,
     required: true,
     default: true,
   },

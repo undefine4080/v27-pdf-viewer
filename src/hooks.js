@@ -96,21 +96,17 @@ function useScaling(enable, callback) {
 }
 
 function usePdfSource(src) {
-  const fileSource = ref(); // 文件流
-  const loading = ref(true); // 源文件加载状态 true-加载中 false-加载完成 undefined-加载失败
-  const total = ref(0); // 总页数
+  const fileSource = ref();
+  // 源文件加载状态 true-加载中 false-加载完成 undefined-加载失败 null-路径不存在
+  const loading = ref(true);
+  const total = ref(0);
 
-  // 读取文件流
   const readSource = (source) => {
-    // 保存 pdf 文件流
     fileSource.value = source;
-    // 获取pdf文件的总页数
     total.value = fileSource.value.numPages;
-
     loading.value = false;
   };
 
-  // 请求文件流
   const fetchFileSource = () => {
     loading.value = true;
 
@@ -126,8 +122,8 @@ function usePdfSource(src) {
         throw error;
       });
     } else {
-      loading.value = undefined;
-      throw new TypeError('src requires a string but received nothing');
+      loading.value = null;
+      console.error('src requires a string but received nothing');
     }
   };
 
